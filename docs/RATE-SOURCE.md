@@ -67,8 +67,10 @@ withdrawal activity.
 
 ## Gate
 
-`./scripts/fork-check.sh` runs the real adapters against live mainnet through
-`[repl.remote_data]` and asserts both rates land in band. The local suite uses
+`./scripts/fork-check.sh` runs the real adapters against mainnet state at a
+pinned block through `[repl.remote_data]` and asserts both rates land in band.
+`./scripts/verify-mainnet-rates.sh` reads the published functions at the live
+chain tip. The local suite uses
 mocks and cannot see an upstream signature change; this can. Run it before any
 deployment.
 
