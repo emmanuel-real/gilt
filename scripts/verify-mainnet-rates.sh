@@ -1,31 +1,47 @@
 #!/usr/bin/env bash
-# Verify Gilt's rate sources against LIVE mainnet state.
+# Read StackingDAO's published stSTX and stBTC rates from mainnet at the chain
+# tip, and check they sit inside the same bands the rate adapters enforce.
 #
-# The StackingDAO v4 contracts are Clarity 6 and cannot be pulled into the
-# Clarinet project as requirements (see docs/MAINNET-VERIFICATION.md), so this
-# script reads them directly from mainnet instead. Run before any deployment.
+# This calls the published functions directly. It deliberately does not
+# recompute rates from reserve totals and token supplies: that derivation
+# ignores pending withdrawals, escrow and pending shares, and came out about
+# 1.4% low for stSTX when checked against mainnet (see docs/RATE-SOURCE.md).
 set -euo pipefail
+
+API="${HIRO_API:-https://api.hiro.so}"
 D=SP4SZE494VC2YC5JYG7AYFQ44F5Q4PYV7DVMDPBG
-read_fn() {
-  curl -s -X POST "https://api.hiro.so/v2/contracts/call-read/$D/$1/$2" \
+
+read_uint() {  # contract function
+  curl -s -X POST "$API/v2/contracts/call-read/$D/$1/$2" \
     -H "Content-Type: application/json" \
     -d "{\"sender\":\"$D\",\"arguments\":[]}" \
-  | python3 -c "
-import json,sys
-r=json.load(sys.stdin)
-if not r.get('okay'): print('ERR', r.get('cause')); sys.exit(1)
-h=r['result'][2:]
-if h.startswith('07'): h=h[2:]
-print(int(h[2:],16))"
+  | python3 -c '
+import json, sys
+r = json.load(sys.stdin)
+if not r.get("okay"):
+    sys.exit("read failed: %s" % r.get("cause"))
+h = r["result"][2:]
+if h.startswith("07"):  # (ok uint)
+    h = h[2:]
+if not h.startswith("01"):
+    sys.exit("unexpected Clarity value: " + r["result"])
+print(int(h[2:], 16))'
 }
-echo "== stSTX (6 dp) =="
-TOT=$(read_fn stx-reserve-v2 get-total-stx)
-B1=$(read_fn ststxbtc-token get-total-supply)
-B2=$(read_fn ststxbtc-token-v2 get-total-supply)
-SUP=$(read_fn ststx-token get-total-supply)
-python3 -c "print(f'  reserve={$TOT} ststxbtc={$B1}+{$B2} supply={$SUP}'); r=($TOT-$B1-$B2)*10**6//$SUP; print(f'  rate = u{r} = {r/1e6:.6f} STX/stSTX'); assert 900000 < r < 3000000, 'RATE OUT OF SANE RANGE'"
-echo "== stBTC (8 dp) =="
-TB=$(read_fn stbtc-reserve get-total-sbtc)
-SB=$(read_fn stbtc-token get-total-supply)
-python3 -c "print(f'  reserve={$TB} sats supply={$SB} sats'); r=$TB*10**8//$SB; print(f'  rate = u{r} = {r/1e8:.8f} BTC/stBTC'); assert 90000000 < r < 300000000, 'RATE OUT OF SANE RANGE'"
-echo "OK - both rates within sane bounds"
+
+check() {  # name value min max decimals unit
+  python3 - "$@" << 'PY'
+import sys
+name, unit = sys.argv[1], sys.argv[6]
+value, lo, hi, dec = (int(x) for x in (sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]))
+print(f"{name}: u{value} = {value / 10**dec:.{dec}f} {unit}")
+if not lo <= value <= hi:
+    sys.exit(f"FAIL: {name} rate outside the adapter band [{lo}, {hi}]")
+PY
+}
+
+STSTX=$(read_uint data-stx-v2 get-stx-per-ststx)
+STBTC=$(read_uint data-stbtc-v1 get-sbtc-per-stbtc)
+
+check stSTX "$STSTX" 1000000 3000000 6 "STX per stSTX"
+check stBTC "$STBTC" 100000000 300000000 8 "sBTC per stBTC"
+echo "OK: published rates are inside the adapter bands"
