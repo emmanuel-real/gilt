@@ -31,7 +31,8 @@ Working prototype:
   adapters for stSTX and stBTC
 - 45-test Clarinet suite, all green, including randomised solvency runs
 - A forked-mainnet gate (`./scripts/fork-check.sh`) that runs the real adapters
-  against live StackingDAO state
+  against StackingDAO's mainnet contracts at a pinned block, and a live check
+  (`./scripts/verify-mainnet-rates.sh`) of the published rates at the chain tip
 - No AMM, no price oracle, no liquidations anywhere in the design
 
 Launch asset is **stSTX**: 47.2M supply and the liquid market. stBTC is a
@@ -131,8 +132,8 @@ every series. See `docs/RATE-SOURCE.md`.
 
 Both are read-only returning a bare `uint`, which a Clarity trait cannot
 express, so a thin adapter republishes each behind a dispatchable trait and
-absorbs version churn. `./scripts/fork-check.sh` gates deployment against live
-mainnet.
+absorbs version churn. `./scripts/fork-check.sh` gates deployment on a mainnet
+fork; `docs/MAINNET-VERIFICATION.md` records what both checks returned.
 
 ## Canonical dependencies
 
@@ -171,17 +172,20 @@ tests/
   gilt-series.test.ts       lifecycle, math, auth, edge cases, solvency
   gilt-vault.test.ts        live-rate deposits, pro-rating, capacity, payouts, randomised solvency
 scripts/
-  fork-check.sh               real adapters vs live mainnet -- the deploy gate
+  fork-check.sh               real adapters on a pinned mainnet fork -- the deploy gate
+  verify-mainnet-rates.sh     published rates at the live chain tip
 docs/
   RATE-SOURCE.md              why Gilt reads rather than derives
+  MAINNET-VERIFICATION.md     how to reproduce the mainnet checks, with results
 ```
 
 ## Run it
 
 ```bash
-clarinet check            # compiles the local contract set
-npm install && npm test   # 45 tests
-./scripts/fork-check.sh   # real adapters vs live mainnet
+clarinet check                    # compiles the local contract set
+npm install && npm test           # 45 tests
+./scripts/fork-check.sh           # real adapters on a pinned mainnet fork
+./scripts/verify-mainnet-rates.sh # published rates at the chain tip (curl, python3)
 ```
 
 ## Safety properties
