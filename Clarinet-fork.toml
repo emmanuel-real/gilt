@@ -1,0 +1,31 @@
+# Forked-mainnet manifest.
+#
+# Runs Gilt's real rate adapters against live StackingDAO state. remote_data
+# reads the Clarity 6 data contracts at runtime -- the only way to reach them,
+# since they cannot be pulled in as static requirements at any epoch.
+[project]
+name = "gilt-fork"
+description = "Gilt rate adapters against forked mainnet"
+authors = []
+telemetry = false
+cache_dir = "./.cache"
+
+[contracts.rate-source-trait]
+path = "contracts/rate-source-trait.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.stackingdao-rate-source]
+path = "contracts/mainnet/stackingdao-rate-source.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.stbtc-rate-source]
+path = "contracts/mainnet/stbtc-rate-source.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[repl.remote_data]
+enabled = true
+api_url = "https://api.hiro.so"
+initial_height = 8895400
