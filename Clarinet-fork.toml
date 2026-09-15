@@ -1,8 +1,11 @@
 # Forked-mainnet manifest.
 #
-# Runs Gilt's real rate adapters against live StackingDAO state. remote_data
+# Runs Gilt's real rate adapters against StackingDAO's mainnet contracts, at
+# the block pinned by initial_height so results are reproducible. remote_data
 # reads the Clarity 6 data contracts at runtime -- the only way to reach them,
 # since they cannot be pulled in as static requirements at any epoch.
+# scripts/fork-check.sh runs this manifest in a scratch directory so it never
+# shares a deployment plan with the unit tests.
 [project]
 name = "gilt-fork"
 description = "Gilt rate adapters against forked mainnet"
