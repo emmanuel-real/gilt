@@ -1,18 +1,19 @@
 [project]
 name = "gilt"
-description = "Fixed-term yield splitting for Stacks stacking yield (stSTX -> PT + YT)"
+description = "Fixed-rate yield on stSTX, with a principal and yield split engine"
 authors = []
 telemetry = false
 cache_dir = "./.cache"
 
-# Canonical mainnet dependencies (Clarity 2 -- resolvable by clarinet 3.21.1).
+# Mainnet requirements. These use older Clarity versions that Clarinet can
+# resolve.
 #
-# StackingDAO's v4 contracts (stx-reserve-v2, stbtc-token, stbtc-reserve) are
-# Clarity 6 and CANNOT be pulled as requirements by this Clarinet version --
-# `clarinet check` fails with "use of unresolved contract". The two mainnet
-# rate adapters that read them therefore live in contracts/mainnet/ and are
-# verified directly against mainnet with `scripts/verify-mainnet-rates.sh`
-# (clarinet console + [repl.remote_data]). See docs/MAINNET-VERIFICATION.md.
+# StackingDAO's v4 data contracts (data-stx-v2, data-stbtc-v1) are Clarity 6
+# and cannot be pulled in as requirements, so the two rate adapters that read
+# them live in contracts/mainnet/ and are left out of this manifest. They are
+# exercised by scripts/fork-check.sh, which runs Clarinet-fork.toml with
+# [repl.remote_data], and the live published rates are checked by
+# scripts/verify-mainnet-rates.sh. See docs/MAINNET-VERIFICATION.md.
 [[project.requirements]]
 contract_id = "SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard"
 
