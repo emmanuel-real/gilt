@@ -1,0 +1,70 @@
+[project]
+name = "gilt"
+description = "Fixed-term yield splitting for Stacks stacking yield (stSTX -> PT + YT)"
+authors = []
+telemetry = false
+cache_dir = "./.cache"
+
+# Canonical mainnet dependencies (Clarity 2 -- resolvable by clarinet 3.21.1).
+#
+# StackingDAO's v4 contracts (stx-reserve-v2, stbtc-token, stbtc-reserve) are
+# Clarity 6 and CANNOT be pulled as requirements by this Clarinet version --
+# `clarinet check` fails with "use of unresolved contract". The two mainnet
+# rate adapters that read them therefore live in contracts/mainnet/ and are
+# verified directly against mainnet with `scripts/verify-mainnet-rates.sh`
+# (clarinet console + [repl.remote_data]). See docs/MAINNET-VERIFICATION.md.
+[[project.requirements]]
+contract_id = "SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE.sip-010-trait-ft-standard"
+
+[[project.requirements]]
+contract_id = "SP4SZE494VC2YC5JYG7AYFQ44F5Q4PYV7DVMDPBG.ststx-token"
+
+[[project.requirements]]
+contract_id = "SP4SZE494VC2YC5JYG7AYFQ44F5Q4PYV7DVMDPBG.ststxbtc-token"
+
+[[project.requirements]]
+contract_id = "SP4SZE494VC2YC5JYG7AYFQ44F5Q4PYV7DVMDPBG.ststxbtc-token-v2"
+
+[contracts.rate-source-trait]
+path = "contracts/rate-source-trait.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.mock-rate-source]
+path = "contracts/mock-rate-source.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.mock-rate-source-2]
+path = "contracts/mock-rate-source-2.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.mock-ststx]
+path = "contracts/mock-ststx.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.pt-token]
+path = "contracts/pt-token.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.yt-token]
+path = "contracts/yt-token.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.gilt-series]
+path = "contracts/gilt-series.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[contracts.gilt-vault]
+path = "contracts/gilt-vault.clar"
+clarity_version = 3
+epoch = "3.1"
+
+[repl.analysis]
+passes = ["check_checker"]
+check_checker = { trusted_sender = false, trusted_caller = false, callee_filter = false }
